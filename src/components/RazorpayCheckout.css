@@ -1,0 +1,162 @@
+.razorpay-checkout {
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.payment-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.error-icon {
+  font-size: 20px;
+}
+
+.payment-error p {
+  margin: 0;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pay-now-btn,
+.whatsapp-btn {
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.pay-now-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.pay-now-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.pay-now-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.whatsapp-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+}
+
+.whatsapp-btn:hover {
+  background: #25d366;
+  color: white;
+  border-color: #25d366;
+}
+
+.btn-icon {
+  font-size: 20px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.divider span {
+  padding: 0 16px;
+}
+
+.payment-security {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.security-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.security-icon {
+  font-size: 14px;
+}
+
+.payment-note {
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .razorpay-checkout {
+    padding: 20px;
+  }
+  
+  .pay-now-btn,
+  .whatsapp-btn {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+  
+  .payment-security {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+}

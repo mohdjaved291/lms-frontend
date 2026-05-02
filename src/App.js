@@ -42,6 +42,7 @@ import Refunds from './pages/Refunds';
 import TicketRequest from './pages/TicketRequest';
 import ChatBot from './components/ChatBot';
 import SetupAccount from './pages/SetupAccount';
+import VideoPlayer from './pages/VideoPlayer';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -117,6 +118,8 @@ const AppRoutes = () => {
         <Route path="/refunds" element={<Refunds />} />
         <Route path="/ticket-request" element={<TicketRequest />} />
         <Route path="/setup-account" element={<SetupAccount />} />
+        <Route path="/video/:courseId/:videoId" element={<VideoPlayer />} />
+        <Route path="/video/:courseId" element={<VideoPlayer />} />
       </Routes>
       <ChatBot />
     </>
