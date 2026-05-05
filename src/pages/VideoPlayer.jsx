@@ -8,19 +8,24 @@ const VideoPlayer = () => {
   const { courseId, videoId } = useParams();
   const navigate = useNavigate();
   const [video, setVideo] = useState(null);
-  const [progress, setProgress] = useState(0);
+  const [displayPercent, setDisplayPercent] = useState(0);
+  const [startSeconds, setStartSeconds] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadVideo = async () => {
       try {
         const videos = await getVideosByCourse(courseId);
-        const currentVideo = videos.find(v => v.id === videoId) || videos[0];
+        const currentVideo = videos.find((v) => String(v.id) === String(videoId)) || videos[0];
         setVideo(currentVideo);
 
         if (currentVideo) {
           const savedProgress = await getVideoProgress(currentVideo.id);
-          setProgress(savedProgress.progress || 0);
+          const seconds = savedProgress.watchedSeconds || 0;
+          setStartSeconds(seconds);
+          if (currentVideo.duration > 0) {
+            setDisplayPercent((seconds / currentVideo.duration) * 100);
+          }
         }
       } catch (error) {
         console.error('Failed to load video:', error);
@@ -32,18 +37,20 @@ const VideoPlayer = () => {
     loadVideo();
   }, [courseId, videoId]);
 
+  // Called by VimeoPlayer every few seconds with { percent, seconds, duration }
   const handleProgress = async (data) => {
-    setProgress(data.percent);
-    
-    // Save progress every 10%
-    if (Math.floor(data.percent) % 10 === 0) {
-      await updateVideoProgress(video?.id, data.percent);
+    setDisplayPercent(data.percent);
+
+    // Save to backend every 10 seconds of watch time
+    if (Math.floor(data.seconds) % 10 === 0) {
+      await updateVideoProgress(video?.id, data.seconds);
     }
   };
 
   const handleComplete = async () => {
-    await updateVideoProgress(video?.id, 100);
-    // Optionally mark as completed and show next video
+    if (video) {
+      await updateVideoProgress(video.id, video.duration);
+    }
   };
 
   if (loading) {
@@ -70,19 +77,19 @@ const VideoPlayer = () => {
         <h2>{video.title}</h2>
         <div className="progress-indicator">
           <div className="progress-bar">
-            <div 
+            <div
               className="progress-fill"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${displayPercent}%` }}
             />
           </div>
-          <span>{Math.round(progress)}% completed</span>
+          <span>{Math.round(displayPercent)}% completed</span>
         </div>
       </div>
 
       <VimeoPlayer
         videoId={video.vimeo_video_id}
         title={video.title}
-        startTime={(progress / 100) * video.duration}
+        startTime={startSeconds}
         onProgress={handleProgress}
         onComplete={handleComplete}
         width="100%"

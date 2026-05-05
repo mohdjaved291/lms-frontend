@@ -1,5 +1,4 @@
-// Payment Service
-// Integrates with Razorpay for client-side payments
+import { post } from './api';
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -7,7 +6,6 @@ const loadRazorpayScript = () => {
       resolve(true);
       return;
     }
-    
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.onload = () => resolve(true);
@@ -16,31 +14,28 @@ const loadRazorpayScript = () => {
   });
 };
 
+// Creates a Razorpay order on the backend, then opens the Razorpay payment modal.
+// On success, verifies the payment with the backend and returns the result.
 export const initiatePayment = async (options) => {
   const loaded = await loadRazorpayScript();
-  
-  if (!loaded) {
-    throw new Error('Failed to load Razorpay SDK');
-  }
-  
+  if (!loaded) throw new Error('Failed to load Razorpay SDK');
+
+  // Step 1: Create order on backend
+  const orderResponse = await post('/courses/payment/create-order/', {
+    amount: Math.round(options.amount / 100), // api.js sends rupees; backend converts to paise
+    course_id: options.courseId,
+  });
+  const { order_id, amount, currency, key } = orderResponse.data;
+
+  // Step 2: Open Razorpay modal
   return new Promise((resolve, reject) => {
     const rzp = new window.Razorpay({
-      key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY_HERE',
-      amount: options.amount, // Amount in paise
-      currency: options.currency || 'INR',
+      key,
+      amount,
+      currency,
       name: options.name || 'LearnPro',
       description: options.description || 'Course Enrollment',
-      image: options.logo || '/logo.png',
-      order_id: options.orderId, // Optional: if you have backend
-      handler: function (response) {
-        // Payment successful
-        resolve({
-          success: true,
-          paymentId: response.razorpay_payment_id,
-          orderId: response.razorpay_order_id,
-          signature: response.razorpay_signature,
-        });
-      },
+      order_id,
       prefill: {
         name: options.customerName || '',
         email: options.customerEmail || '',
@@ -50,31 +45,43 @@ export const initiatePayment = async (options) => {
         courseId: options.courseId,
         courseName: options.courseName,
       },
-      theme: {
-        color: '#3b82f6', // LearnPro blue
+      theme: { color: '#3b82f6' },
+      handler: async (response) => {
+        // Step 3: Verify payment with backend
+        try {
+          const verifyResponse = await post('/courses/payment/verify/', {
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+            course_id: options.courseId,
+          });
+          resolve({
+            success: true,
+            paymentId: response.razorpay_payment_id,
+            orderId: response.razorpay_order_id,
+            enrolled: verifyResponse.data.enrolled,
+          });
+        } catch (err) {
+          reject(new Error('Payment verification failed'));
+        }
       },
       modal: {
-        ondismiss: function() {
-          reject(new Error('Payment cancelled by user'));
-        },
+        ondismiss: () => reject(new Error('Payment cancelled by user')),
       },
     });
-    
-    rzp.on('payment.failed', function (response) {
+
+    rzp.on('payment.failed', (response) => {
       reject(new Error(response.error.description));
     });
-    
+
     rzp.open();
   });
 };
 
-// Store payment history in localStorage
+// Store payment history in localStorage as a local record
 export const savePaymentHistory = (paymentData) => {
   const history = JSON.parse(localStorage.getItem('payment_history') || '[]');
-  history.push({
-    ...paymentData,
-    timestamp: new Date().toISOString(),
-  });
+  history.push({ ...paymentData, timestamp: new Date().toISOString() });
   localStorage.setItem('payment_history', JSON.stringify(history));
 };
 

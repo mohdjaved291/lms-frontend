@@ -1,67 +1,62 @@
-// Live Session Service
-// Manages Google Meet/Zoom links for live classes
-// Currently using localStorage/config - replace with API when backend is ready
+import { get } from './api';
 
-const DEFAULT_SESSIONS = {
-  'python': {
-    meetingUrl: 'https://meet.google.com/abc-de',
-    password: '923 9146',
-    timing: '10:30 AM - 3:00 PM',
-    isActive: true,
-    startTime: new Date().setHours(10, 30, 0, 0),
-    endTime: new Date().setHours(15, 0, 0, 0),
-  },
-  'web-development': {
-    meetingUrl: 'https://meet.google.com/def-gh',
-    password: '123 4567',
-    timing: '2:00 PM - 5:00 PM',
-    isActive: false,
-    startTime: new Date().setHours(14, 0, 0, 0),
-    endTime: new Date().setHours(17, 0, 0, 0),
-  },
+// Transforms a backend LiveSession object into the shape LiveSessionCard expects
+const formatSession = (session) => {
+  const start = new Date(session.start_time);
+  const end = new Date(session.end_time);
+
+  return {
+    id: session.id,
+    title: session.title,
+    meetingUrl: session.meeting_link,
+    meetingId: session.meeting_id,
+    password: session.meeting_password,
+    timing: `${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+    startTime: start.getTime(),
+    endTime: end.getTime(),
+    isActive: Date.now() >= start.getTime() && Date.now() <= end.getTime(),
+  };
 };
 
-export const getLiveSession = async (courseId) => {
-  // Check localStorage first (admin can update via some interface)
-  const stored = localStorage.getItem(`live_session_${courseId}`);
-  if (stored) {
-    return JSON.parse(stored);
-  }
-  
-  // Return default
-  return DEFAULT_SESSIONS[courseId] || null;
-};
+// Fetch live sessions for a batch from the backend.
+// batchId must be the numeric batch ID from the database.
+export const getLiveSession = async (batchId) => {
+  const response = await get('/content/livesessions/', { batch: batchId });
+  const sessions = response.data;
 
-export const updateLiveSession = async (courseId, sessionData) => {
-  // Store in localStorage for now
-  localStorage.setItem(`live_session_${courseId}`, JSON.stringify({
-    ...sessionData,
-    updatedAt: new Date().toISOString(),
-  }));
-  return { success: true };
+  if (!sessions || sessions.length === 0) return null;
+
+  const formatted = sessions.map(formatSession);
+  const now = Date.now();
+
+  // Prefer currently active session
+  const active = formatted.find((s) => s.isActive);
+  if (active) return active;
+
+  // Otherwise return the next upcoming session
+  const upcoming = formatted
+    .filter((s) => s.startTime > now)
+    .sort((a, b) => a.startTime - b.startTime);
+
+  return upcoming[0] || formatted[formatted.length - 1];
 };
 
 export const isSessionActive = (session) => {
   if (!session) return false;
-  const now = new Date();
-  const startTime = new Date(session.startTime);
-  const endTime = new Date(session.endTime);
-  return now >= startTime && now <= endTime;
+  const now = Date.now();
+  return now >= session.startTime && now <= session.endTime;
 };
 
 export const getTimeUntilSession = (session) => {
   if (!session) return null;
-  const now = new Date();
-  const startTime = new Date(session.startTime);
-  const diff = startTime - now;
-  
+  const now = Date.now();
+  const diff = session.startTime - now;
+
   if (diff <= 0) return 'Session started';
-  
+
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  
-  if (hours > 0) {
-    return `Starts in ${hours}h ${minutes}m`;
-  }
+
+  if (hours > 0) return `Starts in ${hours}h ${minutes}m`;
   return `Starts in ${minutes}m`;
 };

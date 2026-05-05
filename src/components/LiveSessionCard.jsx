@@ -4,7 +4,7 @@ import { faVideo, faKey, faCalendar, faExternalLinkAlt, faHourglassHalf } from '
 import { getLiveSession, isSessionActive, getTimeUntilSession } from '../services/liveSessionService';
 import './LiveSessionCard.css';
 
-const LiveSessionCard = ({ courseId }) => {
+const LiveSessionCard = ({ batchId }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(false);
@@ -14,7 +14,7 @@ const LiveSessionCard = ({ courseId }) => {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const data = await getLiveSession(courseId);
+        const data = await getLiveSession(batchId);
         sessionRef.current = data;
         setSession(data);
         setActive(isSessionActive(data));
@@ -35,7 +35,7 @@ const LiveSessionCard = ({ courseId }) => {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [courseId]);
+  }, [batchId]);
 
   const handleJoinSession = () => {
     if (session?.meetingUrl) {

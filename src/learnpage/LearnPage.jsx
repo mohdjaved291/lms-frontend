@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './LearnPage.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faPlay } from '@fortawesome/free-solid-svg-icons';
@@ -47,13 +47,13 @@ const LearningDashboard = () => {
           </div>
 
           <div className="batch-section">
-            <LiveSessionCard courseId="python" />
+            <LiveSessionCard batchId={1} />
 
             <div className="quiz-section row-section">
               <div className="left-content">
                 <FontAwesomeIcon icon={faFileAlt} />
                 <div>
-                  <a href="#">Module Quiz: Introduction to Python development</a>
+                  <span className="link-text">Module Quiz: Introduction to Python development</span>
                   <p>Graded Quiz</p>
                 </div>
               </div>
@@ -70,7 +70,7 @@ const LearningDashboard = () => {
               <div className="left-content">
                 <FontAwesomeIcon icon={faFileAlt} />
                 <div>
-                  <a href="#">Submit your assignment</a>
+                  <span className="link-text">Submit your assignment</span>
                   <p>Graded Assignment</p>
                 </div>
               </div>
@@ -113,13 +113,13 @@ const LearningDashboard = () => {
           </div>
 
           <div className="batch-section">
-            <LiveSessionCard courseId="web-development" />
+            <LiveSessionCard batchId={2} />
 
             <div className="quiz-section row-section">
               <div className="left-content">
                 <FontAwesomeIcon icon={faFileAlt} />
                 <div>
-                  <a href="#">Module Quiz: Introduction to Web development</a>
+                  <span className="link-text">Module Quiz: Introduction to Web development</span>
                   <p>Graded Quiz</p>
                 </div>
               </div>
@@ -136,7 +136,7 @@ const LearningDashboard = () => {
               <div className="left-content">
                 <FontAwesomeIcon icon={faFileAlt} />
                 <div>
-                  <a href="#">Submit your assignment</a>
+                  <span className="link-text">Submit your assignment</span>
                   <p>Graded Assignment</p>
                 </div>
               </div>
