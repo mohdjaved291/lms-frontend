@@ -21,8 +21,9 @@ export const initiatePayment = async (options) => {
   if (!loaded) throw new Error('Failed to load Razorpay SDK');
 
   // Step 1: Create order on backend
+  // options.amount is in paise (e.g. 244300); backend expects rupees (e.g. 2443)
   const orderResponse = await post('/courses/payment/create-order/', {
-    amount: Math.round(options.amount / 100), // api.js sends rupees; backend converts to paise
+    amount: Math.round(options.amount / 100),
     course_id: options.courseId,
   });
   const { order_id, amount, currency, key } = orderResponse.data;
@@ -62,7 +63,8 @@ export const initiatePayment = async (options) => {
             enrolled: verifyResponse.data.enrolled,
           });
         } catch (err) {
-          reject(new Error('Payment verification failed'));
+          console.error('Payment verification error:', err?.response?.data || err.message);
+          reject(new Error('Your payment could not be verified. Please contact support if your account was charged.'));
         }
       },
       modal: {

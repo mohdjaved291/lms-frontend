@@ -35,9 +35,33 @@ const AssignmentPage2 = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const ALLOWED_FORMATS = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    setAttachments([...attachments, ...files]);
+    const invalid = [];
+
+    const valid = files.filter((file) => {
+      const ext = '.' + file.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_FORMATS.includes(ext)) {
+        invalid.push(`"${file.name}" — unsupported format. Allowed: ${ALLOWED_FORMATS.join(', ')}`);
+        return false;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        invalid.push(`"${file.name}" — exceeds 50 MB limit.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (invalid.length > 0) {
+      alert(`The following files were rejected:\n\n${invalid.join('\n')}`);
+    }
+
+    if (valid.length > 0) {
+      setAttachments([...attachments, ...valid]);
+    }
   };
 
   const styles = {

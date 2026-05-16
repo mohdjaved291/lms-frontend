@@ -20,9 +20,9 @@ export const updateVideoProgress = async (videoId, watchedSeconds) => {
 // Fetch watch progress for a specific video.
 // Returns { watchedSeconds, isCompleted } from the backend.
 export const getVideoProgress = async (videoId) => {
-  const response = await get('/progress/my-progress/');
-  const allProgress = response.data;
-  const entry = allProgress.find((p) => p.video === videoId);
+  const response = await get('/progress/my-progress/', { video: videoId });
+  const results = response.data;
+  const entry = results[0];
 
   if (!entry) return { watchedSeconds: 0, isCompleted: false };
 

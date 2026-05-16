@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './LearnPage.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faPlay } from '@fortawesome/free-solid-svg-icons';
@@ -6,9 +6,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../HomePage/footer';
 import AfterNavbar from '../components/AfterLoginNavbar';
 import LiveSessionCard from '../components/LiveSessionCard';
+import { get } from '../services/api';
 
 const LearningDashboard = () => {
   const navigate = useNavigate();
+  const [batches, setBatches] = useState([]);
+  const [batchesLoading, setBatchesLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const response = await get('/batches/batches/');
+        setBatches(response.data);
+      } catch (error) {
+        console.error('Failed to fetch batches:', error);
+      } finally {
+        setBatchesLoading(false);
+      }
+    };
+    fetchBatches();
+  }, []);
+
+  // Returns the batch ID for a given index, falls back to null if not yet loaded
+  const getBatchId = (index) => batches[index]?.id || null;
+
   return (
     <div className="learning-container">
       <AfterNavbar />
@@ -47,13 +68,15 @@ const LearningDashboard = () => {
           </div>
 
           <div className="batch-section">
-            <LiveSessionCard batchId={1} />
+            {batchesLoading
+              ? <p style={{ color: '#6b7280', fontSize: '14px' }}>Loading session info...</p>
+              : getBatchId(0) && <LiveSessionCard batchId={getBatchId(0)} />}
 
             <div className="quiz-section row-section">
               <div className="left-content">
                 <FontAwesomeIcon icon={faFileAlt} />
                 <div>
-                  <span className="link-text">Module Quiz: Introduction to Python development</span>
+                  <Link to="/quiz1">Module Quiz: Introduction to Python development</Link>
                   <p>Graded Quiz</p>
                 </div>
               </div>
@@ -62,7 +85,7 @@ const LearningDashboard = () => {
                   Due by <span className="due-date">April 19</span>,<br />
                   11:59 PM IST.
                 </p>
-                <button className="test-btn">Proceed to Test</button>
+                <button className="test-btn" onClick={() => navigate('/quiz1')}>Proceed to Test</button>
               </div>
             </div>
 
@@ -70,7 +93,7 @@ const LearningDashboard = () => {
               <div className="left-content">
                 <FontAwesomeIcon icon={faFileAlt} />
                 <div>
-                  <span className="link-text">Submit your assignment</span>
+                  <Link to="/assignment">Submit your assignment</Link>
                   <p>Graded Assignment</p>
                 </div>
               </div>
@@ -79,13 +102,14 @@ const LearningDashboard = () => {
                   Due by <span className="due-date">April 19</span>,<br />
                   11:59 PM IST.
                 </p>
-                <button style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>Submit Now</button>
+                <button
+                  style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+                  onClick={() => navigate('/assignment')}
+                >Submit Now</button>
               </div>
             </div>
           </div>
         </div>
-
-
 
         {/* Web Section */}
         <div className="course-card-wrapper">
@@ -113,13 +137,13 @@ const LearningDashboard = () => {
           </div>
 
           <div className="batch-section">
-            <LiveSessionCard batchId={2} />
+            {getBatchId(1) && <LiveSessionCard batchId={getBatchId(1)} />}
 
             <div className="quiz-section row-section">
               <div className="left-content">
                 <FontAwesomeIcon icon={faFileAlt} />
                 <div>
-                  <span className="link-text">Module Quiz: Introduction to Web development</span>
+                  <Link to="/quiz1">Module Quiz: Introduction to Web development</Link>
                   <p>Graded Quiz</p>
                 </div>
               </div>
@@ -136,7 +160,7 @@ const LearningDashboard = () => {
               <div className="left-content">
                 <FontAwesomeIcon icon={faFileAlt} />
                 <div>
-                  <span className="link-text">Submit your assignment</span>
+                  <Link to="/assignment">Submit your assignment</Link>
                   <p>Graded Assignment</p>
                 </div>
               </div>
@@ -145,7 +169,10 @@ const LearningDashboard = () => {
                   Due by <span className="due-date">April 19</span>,<br />
                   11:59 PM IST.
                 </p>
-                <button style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>Submit Now</button>
+                <button
+                  style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+                  onClick={() => navigate('/assignment')}
+                >Submit Now</button>
               </div>
             </div>
           </div>
