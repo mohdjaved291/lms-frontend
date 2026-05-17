@@ -12,13 +12,15 @@ const LoginPage = ({ setIsLoggedIn }) => {
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
+    setLoginError("");
+
     let hasError = false;
-    
-    // Validate email
+
     if (!email.trim()) {
       setEmailError("Please enter your email");
       hasError = true;
@@ -26,8 +28,7 @@ const LoginPage = ({ setIsLoggedIn }) => {
       setEmailError("Please enter a valid email address");
       hasError = true;
     }
-    
-    // Validate password
+
     if (!password.trim()) {
       setPasswordError("Please enter your password");
       hasError = true;
@@ -35,22 +36,42 @@ const LoginPage = ({ setIsLoggedIn }) => {
       setPasswordError("Password must be at least 6 characters");
       hasError = true;
     }
-    
-    // Only redirect if no errors
-    if (!hasError) {
+
+    if (hasError) return;
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/login/`,
+        { email, password }
+      );
+      localStorage.setItem('accessToken', response.data.access);
+      localStorage.setItem('refreshToken', response.data.refresh);
       setIsLoggedIn(true);
       navigate("/home");
+    } catch (err) {
+      const msg = err.response?.data?.non_field_errors?.[0]
+        || err.response?.data?.detail
+        || "Invalid email or password.";
+      setLoginError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async (credentialResponse) => {
     try {
-      console.log("Google Sign-In successful!");
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/google-login/`,
+        { token: credentialResponse.access_token }
+      );
+      localStorage.setItem('accessToken', response.data.access);
+      localStorage.setItem('refreshToken', response.data.refresh);
       setIsLoggedIn(true);
       navigate("/home");
     } catch (err) {
       console.error("Google Sign-In failed:", err);
-      alert("Google Sign-In failed");
+      setLoginError("Google Sign-In failed. Please try again.");
     }
   };
 
@@ -122,12 +143,18 @@ const LoginPage = ({ setIsLoggedIn }) => {
                 </a>
               </div>
             </div>
+            {loginError && (
+              <p className="text-sm text-red-500 text-center bg-red-50 border border-red-200 rounded-lg py-2 px-4">
+                {loginError}
+              </p>
+            )}
             <button
               type="submit"
               onClick={handleLogin}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Login to Learn
+              {loading ? "Logging in..." : "Login to Learn"}
             </button>
             <div className="flex items-center justify-center gap-4">
               <hr className="w-1/3 border-t border-gray-300" />
