@@ -52,7 +52,8 @@ const SignupPage = () => {
         `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/register/`,
         { ...trimmed, role: formData.role }
       );
-      navigate('/verification', { state: { email: trimmed.email } });
+      alert('Registration successful! You can now log in.');
+      navigate('/login');
     } catch (err) {
       const data = err.response?.data;
       const msg = data
