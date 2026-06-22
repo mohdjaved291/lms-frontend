@@ -17,6 +17,8 @@ const SignupPage = () => {
     confirm_password: '',
     role: 'student',
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -24,8 +26,9 @@ const SignupPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
     const trimmed = {
       full_name: formData.full_name.trim(),
       email: formData.email.trim(),
@@ -42,17 +45,34 @@ const SignupPage = () => {
       alert("Passwords do not match.");
       return;
     }
-    navigate('/phone');
+
+    setSubmitting(true);
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/register/`,
+        { ...trimmed, role: formData.role }
+      );
+      navigate('/verification', { state: { email: trimmed.email } });
+    } catch (err) {
+      const data = err.response?.data;
+      const msg = data
+        ? Object.values(data).flat().join(' ')
+        : 'Registration failed. Please try again.';
+      setFormError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleGoogleLogin = async (credentialResponse) => {
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/accounts/google-login/`,
+        `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/google-login/`,
         { token: credentialResponse.credential }
       );
-      alert(res.data.message || "Google Sign-In successful!");
-      navigate('/phone');
+      localStorage.setItem('accessToken', res.data.access);
+      localStorage.setItem('refreshToken', res.data.refresh);
+      navigate('/home');
     } catch (err) {
       alert("Google Sign-In failed");
     }
@@ -392,7 +412,12 @@ const SignupPage = () => {
                   )}
                 </div>
               </div>
-              <button className="signup-btn" type="submit">Sign up to Learn</button>
+              {formError && (
+                <p style={{ color: '#dc2626', fontSize: '13px', textAlign: 'center' }}>{formError}</p>
+              )}
+              <button className="signup-btn" type="submit" disabled={submitting}>
+                {submitting ? 'Signing up...' : 'Sign up to Learn'}
+              </button>
               <div className="divider">Or continue with</div>
               <div className="google-btn">
                 <GoogleLogin

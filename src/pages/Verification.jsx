@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
+import axios from 'axios';
 
 const Verification = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [remainingTime, setRemainingTime] = useState(60);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const phoneNumber = location.state?.phoneNumber || 'Unknown';
+  const email = location.state?.email || '';
 
   const handleOtpChange = (e, index) => {
     const value = e.target.value;
@@ -33,20 +36,45 @@ const Verification = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const handleVerify = (e) => {
+  const handleVerify = async (e) => {
     e.preventDefault();
+    setVerifyError('');
     const otpCode = otp.join('');
-    if (otpCode.length === 6) {
-      alert(`Verification successful with code: ${otpCode}`);
-      navigate('/enroll'); // Redirect to Enroll Page after verification
-    } else {
-      alert('Please enter a valid 6-digit OTP.');
+    if (otpCode.length !== 6) {
+      setVerifyError('Please enter a valid 6-digit OTP.');
+      return;
+    }
+
+    setVerifying(true);
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/verify-email/`,
+        { otp: otpCode }
+      );
+      alert('Email verified successfully. You can now login.');
+      navigate('/login');
+    } catch (err) {
+      setVerifyError(err.response?.data?.message || 'Verification failed. Please try again.');
+    } finally {
+      setVerifying(false);
     }
   };
 
-  const handleResendCode = () => {
-    setRemainingTime(60);
-    alert('A new verification code has been sent.');
+  const handleResendCode = async () => {
+    if (!email) {
+      setVerifyError('Missing email — please sign up again.');
+      return;
+    }
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/resend-verify-email/`,
+        { email }
+      );
+      setRemainingTime(60);
+      alert('A new verification code has been sent.');
+    } catch (err) {
+      setVerifyError(err.response?.data?.error || 'Failed to resend code.');
+    }
   };
 
   const handleGoogleLoginSuccess = (credentialResponse) => {
@@ -247,8 +275,11 @@ const Verification = () => {
               {remainingTime === 0 ? 'Resend code' : "Didn't receive code?"}
             </span>
           </div>
-          <button type="submit" style={verifyButtonStyle}>
-            Verify
+          {verifyError && (
+            <p style={{ color: '#dc2626', fontSize: '13px', marginBottom: '1rem' }}>{verifyError}</p>
+          )}
+          <button type="submit" style={verifyButtonStyle} disabled={verifying}>
+            {verifying ? 'Verifying...' : 'Verify'}
           </button>
         </form>
         <div style={dividerStyle}>Or continue with email</div>
