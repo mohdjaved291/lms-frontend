@@ -1,7 +1,60 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import './homepage.css'
 
+const FALLBACK_TESTIMONIALS = [
+  {
+    id: 'fallback-1',
+    name: 'John Doe',
+    role: 'Acme Solutions',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80',
+    rating: 5,
+    text: "I completed the GCP Course. It helped me change my career path to DevOps and Cloud. Within 6 months, I secured the Associate Cloud Engineer Certificate, which helped me get a job at Qwinix.",
+  },
+  {
+    id: 'fallback-2',
+    name: 'Jane Watson',
+    role: 'Beta Innovations',
+    avatar: 'https://images.unsplash.com/photo-1545996124-1b9b8f6b6b60?w=80&q=80',
+    rating: 5,
+    text: "I am a Software Engineer at Accenture. I had good knowledge of SQL server development but wanted to change my career to Data science. I enrolled in the Data Science course and ...",
+  },
+  {
+    id: 'fallback-3',
+    name: 'Robert Winger',
+    role: 'Tech Innovations',
+    avatar: 'https://images.unsplash.com/photo-1545996124-1b9b8f6b6b60?w=80&q=80',
+    rating: 5,
+    text: "I was an Associate at Capgemini but due to some issues, I had to drop. Then, I started learning Data Science during the lockdown which helped me build strong foundations and exposure to real projects.",
+  },
+];
+
 export default function LearnerBenifits(){
+  const [testimonials, setTestimonials] = useState(FALLBACK_TESTIMONIALS);
+
+  useEffect(() => {
+    const apiBase = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+    axios.get(`${apiBase}/courses/reviews/`)
+      .then((res) => {
+        const reviews = Array.isArray(res.data) ? res.data : res.data.results || [];
+        if (reviews.length > 0) {
+          setTestimonials(
+            reviews.slice(0, 3).map((r) => ({
+              id: r.id,
+              name: r.user?.full_name || 'Anonymous Student',
+              role: 'Verified Learner',
+              avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80',
+              rating: r.rating,
+              text: r.feedback,
+            }))
+          );
+        }
+      })
+      .catch(() => {
+        // Keep fallback testimonials if the API call fails
+      });
+  }, []);
+
   return (
     <section className="learner-section">
       <h3 className="learner-heading">Learner Benefits</h3>
@@ -45,41 +98,19 @@ export default function LearnerBenifits(){
         </div>
 
         <div className="testimonials">
-          <div className="testimonial-card">
-            <div className="t-meta">
-              <img className="t-avatar-img" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80" alt="John" />
-              <div>
-                <div className="t-name">John Doe</div>
-                <div className="t-role">Acme Solutions</div>
+          {testimonials.map((t) => (
+            <div className="testimonial-card" key={t.id}>
+              <div className="t-meta">
+                <img className="t-avatar-img" src={t.avatar} alt={t.name} />
+                <div>
+                  <div className="t-name">{t.name}</div>
+                  <div className="t-role">{t.role}</div>
+                </div>
               </div>
+              <div className="t-stars">{'★'.repeat(t.rating)}{'☆'.repeat(5 - t.rating)}</div>
+              <p className="t-text">{t.text}</p>
             </div>
-            <div className="t-stars">★★★★★</div>
-            <p className="t-text">I completed the GCP Course. It helped me change my career path to DevOps and Cloud. Within 6 months, I secured the Associate Cloud Engineer Certificate, which helped me get a job at Qwinix.</p>
-          </div>
-
-          <div className="testimonial-card">
-            <div className="t-meta">
-              <img className="t-avatar-img" src="https://images.unsplash.com/photo-1545996124-1b9b8f6b6b60?w=80&q=80" alt="Jane" />
-              <div>
-                <div className="t-name">Jane Watson</div>
-                <div className="t-role">Beta Innovations</div>
-              </div>
-            </div>
-            <div className="t-stars">★★★★★</div>
-            <p className="t-text">I am a Software Engineer at Accenture. I had good knowledge of SQL server development but wanted to change my career to Data science. I enrolled in the Data Science course and ...</p>
-          </div>
-
-          <div className="testimonial-card">
-            <div className="t-meta">
-              <img className="t-avatar-img" src="https://images.unsplash.com/photo-1545996124-1b9b8f6b6b60?w=80&q=80" alt="Robert" />
-              <div>
-                <div className="t-name">Robert Winger</div>
-                <div className="t-role">Tech Innovations</div>
-              </div>
-            </div>
-            <div className="t-stars">★★★★★</div>
-            <p className="t-text">I was an Associate at Capgemini but due to some issues, I had to drop. Then, I started learning Data Science during the lockdown which helped me build strong foundations and exposure to real projects.</p>
-          </div>
+          ))}
         </div>
       </div>
     </section>

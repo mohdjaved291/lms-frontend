@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import AfterNavbar from '../components/AfterLoginNavbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faEnvelope, faCalendar, faChevronDown, faChevronUp, faBars, faTrophy, faShoppingCart, faQuestionCircle, faCreditCard, faHeart, faBell, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
+
+const API_BASE = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
+const authHeaders = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+});
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -11,6 +18,17 @@ const Settings = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Always default to 'account' since this is the Settings/Account page
   const [activeItem, setActiveItem] = useState('account');
+
+  const [accountForm, setAccountForm] = useState({ full_name: '', email: '', time_zone: '', language: '' });
+  const [accountSaving, setAccountSaving] = useState(false);
+  const [accountMessage, setAccountMessage] = useState('');
+
+  const [passwordForm, setPasswordForm] = useState({ old_password: '', new_password: '', confirm_new_password: '' });
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
+
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorSaving, setTwoFactorSaving] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -22,6 +40,72 @@ const Settings = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    axios.get(`${API_BASE}/settings/account/`, authHeaders())
+      .then((res) => setAccountForm({
+        full_name: res.data.full_name || '',
+        email: res.data.email || '',
+        time_zone: res.data.time_zone || '',
+        language: res.data.language || '',
+      }))
+      .catch(() => {});
+
+    axios.get(`${API_BASE}/settings/2fa/`, authHeaders())
+      .then((res) => setTwoFactorEnabled(!!res.data.is_enabled))
+      .catch(() => {});
+  }, []);
+
+  const handleSaveAccount = async () => {
+    setAccountSaving(true);
+    setAccountMessage('');
+    try {
+      await axios.patch(`${API_BASE}/settings/account/`, {
+        full_name: accountForm.full_name,
+        time_zone: accountForm.time_zone,
+        language: accountForm.language,
+      }, authHeaders());
+      setAccountMessage('Saved successfully.');
+    } catch (err) {
+      setAccountMessage('Failed to save. Please try again.');
+    } finally {
+      setAccountSaving(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    setPasswordMessage('');
+    if (passwordForm.new_password !== passwordForm.confirm_new_password) {
+      setPasswordMessage('New passwords do not match.');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await axios.post(`${API_BASE}/change-password/`, passwordForm, authHeaders());
+      setPasswordMessage('Password updated successfully.');
+      setPasswordForm({ old_password: '', new_password: '', confirm_new_password: '' });
+    } catch (err) {
+      const data = err.response?.data;
+      setPasswordMessage(
+        (data && Object.values(data).flat().join(' ')) || 'Failed to update password.'
+      );
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const handleToggleTwoFactor = async () => {
+    const next = !twoFactorEnabled;
+    setTwoFactorSaving(true);
+    try {
+      await axios.patch(`${API_BASE}/settings/2fa/`, { is_enabled: next }, authHeaders());
+      setTwoFactorEnabled(next);
+    } catch (err) {
+      // revert on failure
+    } finally {
+      setTwoFactorSaving(false);
+    }
+  };
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -144,18 +228,34 @@ const Settings = () => {
                         <div style={styles.formRow}>
                           <div style={styles.formGroup}>
                             <label style={styles.label}>Full Name</label>
-                            <input type="text" placeholder="Enter your full name" style={styles.input} />
+                            <input
+                              type="text"
+                              placeholder="Enter your full name"
+                              style={styles.input}
+                              value={accountForm.full_name}
+                              onChange={(e) => setAccountForm({ ...accountForm, full_name: e.target.value })}
+                            />
                           </div>
                           <div style={styles.formGroup}>
                             <label style={styles.label}>Email</label>
-                            <input type="email" placeholder="Enter your email address" style={styles.input} />
+                            <input
+                              type="email"
+                              placeholder="Enter your email address"
+                              style={styles.input}
+                              value={accountForm.email}
+                              disabled
+                            />
                           </div>
                         </div>
                         <div style={styles.formRow}>
                           <div style={styles.formGroup}>
                             <label style={styles.label}>Time zone</label>
                             <div style={styles.selectWrapper}>
-                              <select style={styles.select}>
+                              <select
+                                style={styles.select}
+                                value={accountForm.time_zone}
+                                onChange={(e) => setAccountForm({ ...accountForm, time_zone: e.target.value })}
+                              >
                                 <option value="">Select your time zone</option>
                                 <option value="UTC-12:00">(UTC-12:00) International Date Line West</option>
                                 <option value="UTC-11:00">(UTC-11:00) Coordinated Universal Time-11</option>
@@ -186,7 +286,11 @@ const Settings = () => {
                           <div style={styles.formGroup}>
                             <label style={styles.label}>Language</label>
                             <div style={styles.selectWrapper}>
-                              <select style={styles.select}>
+                              <select
+                                style={styles.select}
+                                value={accountForm.language}
+                                onChange={(e) => setAccountForm({ ...accountForm, language: e.target.value })}
+                              >
                                 <option value="">Select your preferred language</option>
                                 <option value="en">English</option>
                                 <option value="es">Spanish</option>
@@ -205,7 +309,10 @@ const Settings = () => {
                             </div>
                           </div>
                         </div>
-                        <button style={styles.saveDetailsButton}>Save details</button>
+                        {accountMessage && <p style={{ fontSize: '13px', color: accountMessage.startsWith('Saved') ? '#16a34a' : '#dc2626' }}>{accountMessage}</p>}
+                        <button style={styles.saveDetailsButton} onClick={handleSaveAccount} disabled={accountSaving}>
+                          {accountSaving ? 'Saving...' : 'Save details'}
+                        </button>
                       </div>
                     )}
                     
@@ -220,17 +327,38 @@ const Settings = () => {
                       <div style={styles.sectionContent}>
                         <div style={styles.formGroup}>
                           <label style={styles.label}>Current Password</label>
-                          <input type="password" placeholder="Enter current password" style={styles.input} />
+                          <input
+                            type="password"
+                            placeholder="Enter current password"
+                            style={styles.input}
+                            value={passwordForm.old_password}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
+                          />
                         </div>
                         <div style={styles.formGroup}>
                           <label style={styles.label}>New Password</label>
-                          <input type="password" placeholder="Enter new password" style={styles.input} />
+                          <input
+                            type="password"
+                            placeholder="Enter new password"
+                            style={styles.input}
+                            value={passwordForm.new_password}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                          />
                         </div>
                         <div style={styles.formGroup}>
                           <label style={styles.label}>Confirm New Password</label>
-                          <input type="password" placeholder="Confirm new password" style={styles.input} />
+                          <input
+                            type="password"
+                            placeholder="Confirm new password"
+                            style={styles.input}
+                            value={passwordForm.confirm_new_password}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, confirm_new_password: e.target.value })}
+                          />
                         </div>
-                        <button style={styles.saveButton}>Update Password</button>
+                        {passwordMessage && <p style={{ fontSize: '13px', color: passwordMessage.startsWith('Password updated') ? '#16a34a' : '#dc2626' }}>{passwordMessage}</p>}
+                        <button style={styles.saveButton} onClick={handleUpdatePassword} disabled={passwordSaving}>
+                          {passwordSaving ? 'Updating...' : 'Update Password'}
+                        </button>
                       </div>
                     )}
                     
@@ -240,7 +368,13 @@ const Settings = () => {
                         <div style={styles.toggleRow}>
                           <span>Enable Two-Factor Authentication</span>
                           <label style={styles.toggle}>
-                            <input type="checkbox" style={styles.toggleInput} />
+                            <input
+                              type="checkbox"
+                              style={styles.toggleInput}
+                              checked={twoFactorEnabled}
+                              disabled={twoFactorSaving}
+                              onChange={handleToggleTwoFactor}
+                            />
                             <span style={styles.toggleSlider}></span>
                           </label>
                         </div>

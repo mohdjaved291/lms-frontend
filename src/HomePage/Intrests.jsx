@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import './homepage.css'
 import dsIcon from './image/datascience.svg'
 import mbaIcon from './image/mba.svg'
@@ -14,37 +15,37 @@ export default function Intrests(){
     <section className="categories">
       <h4>Choose Your <span className="accent">Area Of Interest</span></h4>
       <div className="categories-grid">
-        <div className="category-card">
+        <Link className="category-card" to="/all-courses?category=Data Science">
           <div className="cat-left">
             <div className="cat-title">Data Science</div>
-            <a className="cat-sub" href="#">7 Courses</a>
+            <span className="cat-sub">View Courses</span>
           </div>
           <div className="cat-icon"><img src={dsIcon} alt="Data Science"/></div>
-        </div>
+        </Link>
 
-        <div className="category-card">
+        <Link className="category-card" to="/all-courses?category=MBA Course">
           <div className="cat-left">
             <div className="cat-title">MBA Course</div>
-            <a className="cat-sub" href="#">11 Courses</a>
+            <span className="cat-sub">View Courses</span>
           </div>
           <div className="cat-icon"><img src={mbaIcon} alt="MBA"/></div>
-        </div>
+        </Link>
 
-        <div className="category-card">
+        <Link className="category-card" to="/all-courses?category=AI & ML">
           <div className="cat-left">
             <div className="cat-title">AI & ML</div>
-            <a className="cat-sub" href="#">10 Courses</a>
+            <span className="cat-sub">View Courses</span>
           </div>
           <div className="cat-icon"><img src={aiIcon} alt="AI & ML"/></div>
-        </div>
+        </Link>
 
-        <div className="category-card">
+        <Link className="category-card" to="/all-courses?category=Software & Tech">
           <div className="cat-left">
             <div className="cat-title">Software & Tech</div>
-            <a className="cat-sub" href="#">42 Courses</a>
+            <span className="cat-sub">View Courses</span>
           </div>
           <div className="cat-icon"><img src={codeIcon} alt="Software & Tech"/></div>
-        </div>
+        </Link>
 
       </div>
     </section>

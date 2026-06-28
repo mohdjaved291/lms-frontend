@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FiLock, FiMail } from "react-icons/fi";
 
 const LoginPage = ({ setIsLoggedIn }) => {
@@ -63,7 +63,7 @@ const LoginPage = ({ setIsLoggedIn }) => {
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/google-login/`,
-        { token: credentialResponse.access_token }
+        { token: credentialResponse.credential }
       );
       localStorage.setItem('accessToken', response.data.access);
       localStorage.setItem('refreshToken', response.data.refresh);
@@ -74,15 +74,6 @@ const LoginPage = ({ setIsLoggedIn }) => {
       setLoginError("Google Sign-In failed. Please try again.");
     }
   };
-
-  const login = useGoogleLogin({
-    onSuccess: handleGoogleLogin,
-    onError: () => {
-      console.log('Google Login Failed');
-      alert('Google Login Failed');
-    },
-    flow: 'implicit',
-  });
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -138,9 +129,9 @@ const LoginPage = ({ setIsLoggedIn }) => {
               </div>
               {passwordError && <p className="text-sm text-red-500 mt-1">{passwordError}</p>}
               <div className="text-right mt-1">
-                <a href="#" className="text-sm text-blue-600 hover:underline">
+                <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
                   Forget Password?
-                </a>
+                </Link>
               </div>
             </div>
             {loginError && (
@@ -161,18 +152,19 @@ const LoginPage = ({ setIsLoggedIn }) => {
               <span className="text-sm text-gray-500">Or continue with email</span>
               <hr className="w-1/3 border-t border-gray-300" />
             </div>
-            <button
-              type="button"
-              onClick={login}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
-            >
-              <img
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="Google"
-                className="w-5 h-5"
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleLogin}
+                onError={() => {
+                  console.log('Google Login Failed');
+                  setLoginError('Google Sign-In failed. Please try again.');
+                }}
+                theme="filled_blue"
+                size="large"
+                text="continue_with"
+                shape="rectangular"
               />
-              Continue with Google
-            </button>
+            </div>
             <p className="text-sm text-center text-gray-600">
               New to LearnPro?{" "}
               <a href="/signup" className="text-blue-600 hover:underline font-medium">

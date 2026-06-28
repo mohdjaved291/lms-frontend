@@ -1074,6 +1074,106 @@ function MyProfile() {
                                     </div>
                                 </div>
 
+                                {/* Start date */}
+                                <div className="mt-5">
+                                    <label className="block text-base font-semibold text-gray-900 mb-2">Start date</label>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <p className="text-sm text-gray-600 mb-1">Months</p>
+                                            <div className="relative">
+                                                <select
+                                                    value={educationStartMonth}
+                                                    onChange={(e) => setEducationStartMonth(e.target.value)}
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 appearance-none bg-white text-gray-500"
+                                                >
+                                                    <option value="">Select months</option>
+                                                    {[
+                                                        "January", "February", "March", "April", "May", "June",
+                                                        "July", "August", "September", "October", "November", "December"
+                                                    ].map((month, index) => (
+                                                        <option key={index} value={month}>{month}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm text-gray-600 mb-1">Year</p>
+                                            <div className="relative">
+                                                <select
+                                                    value={educationStartYear}
+                                                    onChange={(e) => setEducationStartYear(e.target.value)}
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 appearance-none bg-white text-gray-500"
+                                                >
+                                                    <option value="">Select Year</option>
+                                                    {Array.from({ length: 60 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                                        <option key={year} value={year}>{year}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* End date */}
+                                <div className="mt-5">
+                                    <label className="block text-base font-semibold text-gray-900 mb-2">End date (leave blank if currently studying)</label>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <p className="text-sm text-gray-600 mb-1">Months</p>
+                                            <div className="relative">
+                                                <select
+                                                    value={educationEndMonth}
+                                                    onChange={(e) => setEducationEndMonth(e.target.value)}
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 appearance-none bg-white text-gray-500"
+                                                >
+                                                    <option value="">Select months</option>
+                                                    {[
+                                                        "January", "February", "March", "April", "May", "June",
+                                                        "July", "August", "September", "October", "November", "December"
+                                                    ].map((month, index) => (
+                                                        <option key={index} value={month}>{month}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm text-gray-600 mb-1">Year</p>
+                                            <div className="relative">
+                                                <select
+                                                    value={educationEndYear}
+                                                    onChange={(e) => setEducationEndYear(e.target.value)}
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 appearance-none bg-white text-gray-500"
+                                                >
+                                                    <option value="">Select Year</option>
+                                                    {Array.from({ length: 60 }, (_, i) => new Date().getFullYear() - i + 5).map(year => (
+                                                        <option key={year} value={year}>{year}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Footer Buttons */}
                                 <div className="flex justify-end space-x-3 mt-8">
                                     <button

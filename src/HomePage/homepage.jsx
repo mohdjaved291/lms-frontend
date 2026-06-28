@@ -64,7 +64,7 @@ export default function HomePage() {
 			<section className="trending">
 				<div className="section-header">
 					<h3>Trending Courses</h3>
-					<a className="all-courses" href="#">All Courses ›</a>
+					<Link className="all-courses" to="/all-courses">All Courses ›</Link>
 				</div>
 
 				<div className="trending-grid">

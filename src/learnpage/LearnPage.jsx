@@ -10,25 +10,27 @@ import { get } from '../services/api';
 
 const LearningDashboard = () => {
   const navigate = useNavigate();
-  const [batches, setBatches] = useState([]);
-  const [batchesLoading, setBatchesLoading] = useState(true);
+  const [enrollments, setEnrollments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('inProgress');
 
   useEffect(() => {
-    const fetchBatches = async () => {
+    const fetchEnrollments = async () => {
       try {
-        const response = await get('/batches/batches/');
-        setBatches(response.data);
+        const response = await get('/courses/my-learnings/');
+        setEnrollments(response.data);
       } catch (error) {
-        console.error('Failed to fetch batches:', error);
+        console.error('Failed to fetch enrollments:', error);
       } finally {
-        setBatchesLoading(false);
+        setLoading(false);
       }
     };
-    fetchBatches();
+    fetchEnrollments();
   }, []);
 
-  // Returns the batch ID for a given index, falls back to null if not yet loaded
-  const getBatchId = (index) => batches[index]?.id || null;
+  const filteredEnrollments = enrollments.filter((e) =>
+    activeTab === 'completed' ? e.progress_percent >= 100 : e.progress_percent < 100
+  );
 
   return (
     <div className="learning-container">
@@ -36,152 +38,103 @@ const LearningDashboard = () => {
       <main style={{ paddingTop: '90px' }}>
         <h2 className="title">My Learning</h2>
         <div className="tabs">
-          <button className="tab active">In Progress</button>
-          <button className="tab">Completed</button>
+          <button
+            className={`tab ${activeTab === 'inProgress' ? 'active' : ''}`}
+            onClick={() => setActiveTab('inProgress')}
+          >
+            In Progress
+          </button>
+          <button
+            className={`tab ${activeTab === 'completed' ? 'active' : ''}`}
+            onClick={() => setActiveTab('completed')}
+          >
+            Completed
+          </button>
         </div>
 
-        {/* Python Section */}
-        <div className="course-card-wrapper">
-          <div className="course-header final-layout">
+        {loading && <p style={{ color: '#6b7280', padding: '24px' }}>Loading your courses...</p>}
 
-            <div className="course-left">
-              <Link to="/next-video-screen" className="course-title-link">
-                <h3>Python Development for beginners</h3>
-              </Link>
-              <p>Course : 20% completed</p>
-              <div className="progress-bar">
-                <div className="progress python"></div>
+        {!loading && filteredEnrollments.length === 0 && (
+          <p style={{ color: '#6b7280', padding: '24px' }}>
+            {activeTab === 'completed'
+              ? "You haven't completed any courses yet."
+              : "You don't have any courses in progress. Browse "}
+            {activeTab !== 'completed' && <Link to="/all-courses">All Courses</Link>}
+            {activeTab !== 'completed' && ' to get started.'}
+          </p>
+        )}
+
+        {filteredEnrollments.map((enrollment) => {
+          const resumeLink = enrollment.last_watched_video
+            ? `/video/${enrollment.course.id}/${enrollment.last_watched_video.id}`
+            : `/video/${enrollment.course.id}`;
+
+          return (
+            <div className="course-card-wrapper" key={enrollment.id}>
+              <div className="course-header final-layout">
+                <div className="course-left">
+                  <Link to={resumeLink} className="course-title-link">
+                    <h3>{enrollment.course.title}</h3>
+                  </Link>
+                  <p>Course : {Math.round(enrollment.progress_percent)}% completed</p>
+                  <div className="progress-bar">
+                    <div className="progress python" style={{ width: `${enrollment.progress_percent}%` }}></div>
+                  </div>
+                </div>
+
+                <div className="course-right">
+                  <div className="course-box-content">
+                    <h4>{enrollment.course.title}</h4>
+                    {enrollment.last_watched_video && (
+                      <p className="video-info">
+                        <FontAwesomeIcon icon={faPlay} /> {enrollment.last_watched_video.title}
+                      </p>
+                    )}
+                  </div>
+                  <Link to={resumeLink} className='res-btn'>Resume</Link>
+                </div>
+
+                <span className="more-options">•••</span>
               </div>
-            </div>
 
-            <div className="course-right">
-              <div className="course-box-content">
-                <h4>Python Development for beginners</h4>
-                <p className="video-info">
-                  <FontAwesomeIcon icon={faPlay} /> Video 1.5 (15 minutes)
-                </p>
-              </div>
-              <Link to="/course-overview/python" className='res-btn'>Resume</Link>
-            </div>
+              <div className="batch-section">
+                {enrollment.batch?.id && <LiveSessionCard batchId={enrollment.batch.id} />}
 
-            <span className="more-options">•••</span>
-          </div>
+                <div className="quiz-section row-section">
+                  <div className="left-content">
+                    <FontAwesomeIcon icon={faFileAlt} />
+                    <div>
+                      <Link to="/quiz1">Module Quiz: {enrollment.course.title}</Link>
+                      <p>Graded Quiz</p>
+                    </div>
+                  </div>
+                  <div className="right-content">
+                    <button className="test-btn" onClick={() => navigate('/quiz1')}>Proceed to Test</button>
+                  </div>
+                </div>
 
-          <div className="batch-section">
-            {batchesLoading
-              ? <p style={{ color: '#6b7280', fontSize: '14px' }}>Loading session info...</p>
-              : getBatchId(0) && <LiveSessionCard batchId={getBatchId(0)} />}
-
-            <div className="quiz-section row-section">
-              <div className="left-content">
-                <FontAwesomeIcon icon={faFileAlt} />
-                <div>
-                  <Link to="/quiz1">Module Quiz: Introduction to Python development</Link>
-                  <p>Graded Quiz</p>
+                <div className="assignment-section row-section">
+                  <div className="left-content">
+                    <FontAwesomeIcon icon={faFileAlt} />
+                    <div>
+                      <Link to="/assignment">Submit your assignment</Link>
+                      <p>Graded Assignment</p>
+                    </div>
+                  </div>
+                  <div className="right-content">
+                    <button
+                      style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+                      onClick={() => navigate('/assignment')}
+                    >Submit Now</button>
+                  </div>
                 </div>
               </div>
-              <div className="right-content">
-                <p className="due-text">
-                  Due by <span className="due-date">April 19</span>,<br />
-                  11:59 PM IST.
-                </p>
-                <button className="test-btn" onClick={() => navigate('/quiz1')}>Proceed to Test</button>
-              </div>
             </div>
-
-            <div className="assignment-section row-section">
-              <div className="left-content">
-                <FontAwesomeIcon icon={faFileAlt} />
-                <div>
-                  <Link to="/assignment">Submit your assignment</Link>
-                  <p>Graded Assignment</p>
-                </div>
-              </div>
-              <div className="right-content">
-                <p className="due-text">
-                  Due by <span className="due-date">April 19</span>,<br />
-                  11:59 PM IST.
-                </p>
-                <button
-                  style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-                  onClick={() => navigate('/assignment')}
-                >Submit Now</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Web Section */}
-        <div className="course-card-wrapper">
-          <div className="course-header final-layout">
-
-            <div className="course-left">
-              <h3>Web Development for beginners</h3>
-              <p>Course : 20% completed</p>
-              <div className="progress-bar">
-                <div className="progress python"></div>
-              </div>
-            </div>
-
-            <div className="course-right">
-              <div className="course-box-content">
-                <h4>Web Development for beginners</h4>
-                <p className="video-info">
-                  <FontAwesomeIcon icon={faPlay} /> Video 1.5 (15 minutes)
-                </p>
-              </div>
-              <Link to="/course-overview/web" className='res-btn'>Resume</Link>
-            </div>
-
-            <span className="more-options">•••</span>
-          </div>
-
-          <div className="batch-section">
-            {getBatchId(1) && <LiveSessionCard batchId={getBatchId(1)} />}
-
-            <div className="quiz-section row-section">
-              <div className="left-content">
-                <FontAwesomeIcon icon={faFileAlt} />
-                <div>
-                  <Link to="/quiz1">Module Quiz: Introduction to Web development</Link>
-                  <p>Graded Quiz</p>
-                </div>
-              </div>
-              <div className="right-content">
-                <p className="due-text">
-                  Due by <span className="due-date">April 19</span>,<br />
-                  11:59 PM IST.
-                </p>
-                <button className="test-btn" onClick={() => navigate('/quiz1')}>Proceed to Test</button>
-              </div>
-            </div>
-
-            <div className="assignment-section row-section">
-              <div className="left-content">
-                <FontAwesomeIcon icon={faFileAlt} />
-                <div>
-                  <Link to="/assignment">Submit your assignment</Link>
-                  <p>Graded Assignment</p>
-                </div>
-              </div>
-              <div className="right-content">
-                <p className="due-text">
-                  Due by <span className="due-date">April 19</span>,<br />
-                  11:59 PM IST.
-                </p>
-                <button
-                  style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-                  onClick={() => navigate('/assignment')}
-                >Submit Now</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
+          );
+        })}
       </main>
 
       <Footer />
-
     </div>
   );
 };

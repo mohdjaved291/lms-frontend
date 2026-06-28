@@ -43,6 +43,9 @@ import TicketRequest from './pages/TicketRequest';
 import ChatBot from './components/ChatBot';
 import SetupAccount from './pages/SetupAccount';
 import VideoPlayer from './pages/VideoPlayer';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import AllCourses from './pages/AllCourses';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -56,6 +59,7 @@ const AppRoutes = () => {
   const excludedNavRoutes = [
     '/signup',
     '/login',
+    '/forgot-password',
     '/phone',
     '/verification',
     '/enroll',
@@ -69,7 +73,7 @@ const AppRoutes = () => {
     '/next-video-screen'
   ];
 
-  const shouldShowNavBar = !excludedNavRoutes.includes(location.pathname);
+  const shouldShowNavBar = !excludedNavRoutes.includes(location.pathname) && !location.pathname.startsWith('/reset-password');
   const forceAfterNavbar = ['/myProfile', '/settings', '/communication-preferences', '/calendar-sync', '/my-accomplishments', '/help-center', '/my-purchases', '/payment', '/certificate', '/account-notifications', '/refunds', '/ticket-request', '/setup-account'];
   const showCertificateNavbar = location.pathname.startsWith('/certificate') || location.pathname.startsWith('/thank-instructor');
   const showAfterNavbar = isLoggedIn || forceAfterNavbar.includes(location.pathname) || showCertificateNavbar;
@@ -80,6 +84,9 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+        <Route path="/all-courses" element={<AllCourses />} />
         <Route path="/home" element={<Home setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn} />} />
         <Route path="/signup" element={<SignUp setIsLoggedIn={setIsLoggedIn} />} />
         <Route path="/phone" element={<PhoneNumber />} />
